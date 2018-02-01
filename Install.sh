@@ -471,7 +471,7 @@ END
 
 fi
 
-	wget -O /usr/local/bin/menu "https://raw.githubusercontent.com/nwqionm/OPENEXTRA/master/menu"
+	wget -O /usr/local/bin/menu "https://raw.githubusercontent.com/banklovelo01/nonstop/master/menu"
 	chmod +x /usr/local/bin/menu
 	apt-get -y install vnstat
 	cd /etc/openvpn/easy-rsa/
