@@ -1,7 +1,7 @@
 #!/bin/bash
 
 clear
-
+GROUPNAME=nogroup
 IP=$(ip addr | grep 'inet' | grep -v inet6 | grep -vE '127\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}' | grep -o -E '[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}' | head -1)
 if [[ "$IP" = "" ]]; then
 	IP=$(wget -4qO- "http://whatismyip.akamai.com/")
@@ -20,23 +20,24 @@ echo -e "${RED}  (,(”)(”) °.¸¸.• ${NC}"
 echo ""
 echo -e "MENU SCRIPT ${RED}✿.｡.:* *.:｡✿*ﾟ’ﾟ･✿.｡.:*${NC}"
 echo ""
-echo -e "|${RED}1${NC}| สร้างบัญชีใหม่"
-echo -e "|${RED}2${NC}| ลบบัญชี"
-echo -e "|${RED}3${NC}| ตรวจสอบรายชื่อทั้งหมด"
-echo -e "|${RED}4${NC}| ดูผู้ใช้ที่ออนไลน์"
-echo -e "|${RED}5${NC}| แก้ไขวันหมดอายุ"
-echo -e "|${RED}6${NC}| ตั้งค่ารีบูต vpsแบบอัตโนมัติ"
-echo -e "|${RED}7${NC}| ทดสอบอินเตอร์เน็ต"
-echo -e "|${RED}8${NC}| "
-echo -e "|${RED}9${NC}| "
+echo -e "|${RED} 1${NC}| สร้างบัญชีใหม่"
+echo -e "|${RED} 2${NC}| ลบบัญชี"
+echo -e "|${RED} 3${NC}| ดูรายชื่อทั้งหมด"
+echo -e "|${RED} 4${NC}| ดูรายชื่อที่ออนไลน์"
+echo -e "|${RED} 5${NC}| แก้ไขวันหมดอายุ"
+echo -e "|${RED} 6${NC}| ตั้งค่ารีบูต vps อัตโนมัติ"
+echo -e "|${RED} 7${NC}| ทดสอบอินเตอร์เน็ต"
+echo -e "|${RED} 8${NC}| ดูแบนวิชรวม"
+echo -e "|${RED} 9${NC}| LOCK AND UNLOCK CLIENT ${RED}ยังไม่สมบูรณ์  ${NC}"
+echo -e "|${RED}10${NC}| EDIT CONFIG OF CLOUD VPS(ไม่รู้อย่าแก้) ${RED}สำหรับการแก้ไขส่วนต่างๆภายในเครื่องเซิฟเวอร์  ${NC}"
 echo ""
-echo -e "|${RED}0${NC}| UPDATE MENU SCRIPT"
+echo -e "|${RED} 0${NC}| UPDATE MENU SCRIPT"
 echo ""
 if [[ -e /etc/vnstat.conf ]]; then
 	TODAY=$(vnstat -i eth0 | grep "today" | awk '{print $8" "substr ($9, 1, 1)}')
-	WEEK=$(vnstat -i eth0 -w | grep "current week" | awk '{print $9" "substr ($10, 1, 1)}')
-	TOTAL=$(vnstat -i eth0 | grep "`date +"%b '%y"`" | awk '{print $9" "substr ($10, 1, 1)}')
-	echo -e "${RED}-${NC} BANDWIDTH : TODAY ${RED}$TODAY${NC} | WEEK ${RED}$WEEK${NC} | TOTAL ${RED}$TOTAL${NC}"
+	MOUNT=$(vnstat -i eth0 | grep "`date +"%b '%y"`" | awk '{print $9" "substr ($10, 1, 1)}')
+	TOTAL=$(vnstat -i eth0 --nick local | grep "total:" | awk '{print $8" "substr ($9, 1, 1)}')
+	echo -e "BANDWIDTH : TODAY ${RED}$TODAY${NC} THIS MOUNT ${RED}$MOUNT${NC} TOTAL ${RED}$TOTAL${NC}"
 fi
 echo ""
 	cat /etc/shadow | cut -d: -f1,8 | sed /:$/d > /usr/local/bin/Expire-List
@@ -55,7 +56,7 @@ echo ""
 					echo -e "     ${RED}$CLIENT${NC} จะหมดอายุอีกไม่เกิน 24 ชั่วโมง"
 				fi
 		else
-			userdel -r "$CLIENT"
+			$CLIENT=$(tail -n +2 /etc/openvpn/easy-rsa/pki/index.txt | grep "^V" | cut -d '=' -f 2)
 			cd /etc/openvpn/easy-rsa/
 			./easyrsa --batch revoke $CLIENT
 			EASYRSA_CRL_DAYS=3650 ./easyrsa gen-crl
@@ -64,8 +65,9 @@ echo ""
 			rm -rf pki/issued/$CLIENT.crt
 			rm -rf /etc/openvpn/crl.pem
 			cp /etc/openvpn/easy-rsa/pki/crl.pem /etc/openvpn/crl.pem
-			chmod 644 /etc/openvpn/crl.pem
+			chown nobody:$GROUPNAME /etc/openvpn/crl.pem
 			rm -f /home/vps/public_html/$CLIENT.ovpn
+			userdel $CLIENT
 			menu
 			exit
 		fi
@@ -77,8 +79,28 @@ case $MENU in
 
 	1)
 
-clear
+echo ""
+read -p "ชื่อลูกค้าที่ต้องการสร้าง : " -e CLIENT
 
+
+if [[ -e /home/vps/public_html/$CLIENT.ovpn ]]; then
+	echo ""
+	echo "ชื่อลูกค้าที่ระบุอยู่ในระบบแล้ว"
+	echo ""
+	read -p "กลับไปที่เมนู (Y or N) : " -e -i Y REMOVE
+
+	if [[ "$REMOVE" = 'Y' ]]; then
+		menu
+		exit
+	elif [[ "$REMOVE" = 'N' ]]; then
+		exit
+	fi
+fi
+echo ""
+echo -e "     ${RED}ระบุตัวเลข 30 จะทำให้ลูกค้าที่สร้างใช้งานไม่ได้ในอีก 30 วัน${NC}"
+read -p "กำหนดวันหมดอายุ : " -e TimeActive
+
+clear
 newclient () {
 	cp /etc/openvpn/client-common.txt ~/$1.ovpn
 	echo "<ca>" >> ~/$1.ovpn
@@ -95,25 +117,6 @@ newclient () {
 	echo "</tls-auth>" >> ~/$1.ovpn
 }
 
-read -p "ชื่อลูกค้า : " -e CLIENT
-
-
-if [[ -e /home/vps/public_html/$CLIENT.ovpn ]]; then
-	echo ""
-	echo "ชื่อลูกค้าที่ระบุอยู่ในระบบแล้ว"
-	echo ""
-	read -p "กลับไปที่เมนู (Y or N) : " -e -i Y REMOVE
-
-	if [[ "$REMOVE" = 'Y' ]]; then
-		menu
-		exit
-	elif [[ "$REMOVE" = 'N' ]]; then
-		exit
-	fi
-fi
-
-read -p "วันหมดอายุ : " -e TimeActive
-
 cd /etc/openvpn/easy-rsa/
 ./easyrsa build-client-full $CLIENT nopass
 newclient "$CLIENT"
@@ -125,6 +128,7 @@ echo -e "$CLIENT\n$CLIENT\n"|passwd $CLIENT &> /dev/null
 echo ""
 echo "ชื่อลูกค้า : $CLIENT"
 echo "หมดอายุในวันที่ : $EXP"
+echo ""
 echo "ดาวน์โหลดคอนฟิก : http://$IP:85/$CLIENT.ovpn"
 echo ""
 exit
@@ -143,7 +147,7 @@ if [[ "$NUMBEROFCLIENTS" = '0' ]]; then
 fi
 
 echo ""
-tail -n +2 /etc/openvpn/easy-rsa/pki/index.txt | grep "^V" | cut -d '=' -f 2 | nl -s ') '
+tail -n +2 /etc/openvpn/easy-rsa/pki/index.txt | grep "^V" | cut -d '=' -f 2 | nl -s '. '
 if [[ "$NUMBEROFCLIENTS" = '1' ]]; then
 	echo ""
 	echo -e "${RED}คำเตือน${NC} : การออกจากหน้านี้ต้องกด CTRL+C เท่านั้น"
@@ -283,7 +287,7 @@ echo -e "|${RED}4${NC}| รีบูททุกๆ  1 วัน"
 echo -e "|${RED}5${NC}| รีบูททุกๆ  7 วัน"
 echo -e "|${RED}6${NC}| รีบูททุกๆ 30 วัน"
 echo -e "|${RED}7${NC}| หยุดการรีบูทเซิฟเวอร์"
-echo -e "|${RED}8${NC}| ตรวจสอบบันทึกการรีบูทเซิฟเวอร์"
+echo -e "|${RED}8${NC}| ตรวจสอบดูบันทึกการรีบูทเซิฟเวอร์"
 echo -e "|${RED}9${NC}| ลบบันทึกการรีบูทเซิฟเวอร์"
 echo ""
 read -p "Select a Menu : " REBOOT
@@ -397,7 +401,7 @@ if [[ -e /usr/local/bin/speedtest ]]; then
 	clear
 	speedtest --share
 else
-	wget -O /usr/local/bin/speedtest "https://raw.githubusercontent.com/banklovelo01/nonstop/master/speedtest"
+	wget -O /usr/local/bin/speedtest "https://raw.githubusercontent.com/nwqionm/OPENEXTRA/master/speedtest"
 	chmod +x /usr/local/bin/speedtest
 	clear
 	speedtest --share
@@ -406,56 +410,139 @@ fi
 	;;
 
 	8)
+
+TODAY=$(vnstat -i eth0 | grep "today" | awk '{print $8" "substr ($9, 1, 1)}')
+YESTERDAY=$(vnstat -i eth0 | grep "yesterday" | awk '{print $8" "substr ($9, 1, 1)}')
+WEEK=$(vnstat -i eth0 -w | grep "current week" | awk '{print $9" "substr ($10, 1, 1)}')
+RXWEEK=$(vnstat -i eth0 -w | grep "current week" | awk '{print $3" "substr ($10, 1, 1)}')
+TXWEEK=$(vnstat -i eth0 -w | grep "current week" | awk '{print $6" "substr ($10, 1, 1)}')
+MOUNT=$(vnstat -i eth0 | grep "`date +"%b '%y"`" | awk '{print $9" "substr ($10, 1, 1)}')
+RXMOUNT=$(vnstat -i eth0 | grep "`date +"%b '%y"`" | awk '{print $3" "substr ($10, 1, 1)}')
+TXMOUNT=$(vnstat -i eth0 | grep "`date +"%b '%y"`" | awk '{print $6" "substr ($10, 1, 1)}')
+TOTAL=$(vnstat -i eth0 | grep "total:" | awk '{print $8" "substr ($9, 1, 1)}')
+RXTOTAL=$(vnstat -i eth0 | grep "rx:" | awk '{print $2" "substr ($9, 1, 1)}')
+TXTOTAL=$(vnstat -i eth0 | grep "tx:" | awk '{print $5" "substr ($9, 1, 1)}')
+
+clear
+echo ""
+echo -e "BANDWIDTH ${RED}✿.｡.:* *.:｡✿*ﾟ’ﾟ･✿.｡.:*${NC}"
+echo ""
+echo -e "TODAY ${RED}$TODAY${NC}"
+echo -e "YESTERDAY ${RED}$YESTERDAY${NC}"
+echo ""
+echo -e "RECEIVE (rx) ${RED}$RXWEEK${NC} TRANSMIT (tx) ${RED}$TXWEEK${NC}"
+echo -e "CURRENT WEEK ${RED}$WEEK${NC}"
+echo ""
+echo -e "RECEIVE (rx) ${RED}$RXMOUNT${NC} TRANSMIT (tx) ${RED}$TXMOUNT${NC}"
+echo -e "THIS MOUNT TOTAL ${RED}$MOUNT${NC}"
+echo ""
+echo -e "RECEIVE (rx) ${RED}$RXTOTAL${NC} TRANSMIT (tx) ${RED}$TXTOTAL${NC}"
+echo -e "TOTAL ${RED}$TOTAL${NC}"
+echo ""
+exit
+
 	;;
 
 	9)
 
 clear
 echo ""
-echo -e "|${RED}1${NC}| LOCK CLIENT"
-echo -e "|${RED}2${NC}| UNLOCK CLIENT"
-
+echo -e "|${RED}1${NC}| ล็อกชื่อลูกค้า"
+echo -e "|${RED}2${NC}| ปลดล็อกชื่อลูกค้าที่ถูกล็อก"
+echo -e "|${RED}3${NC}| ตรวจสอบดูรายชื่อลูกค้าที่ถูกล็อก"
+echo ""
 read -p "Select a Menu Lock and Unlock : " LandUL
 
 case $LandUL in
 
 	1)
-
 echo ""
-read -p "ชื่อลูกค้าที่ต้องการล็อค ? : " CLIENT
+read -p "ชื่อลูกค้าที่ต้องการล็อก : " CLIENT
 
-egrep "^$CLIENT" /etc/passwd >/dev/null
-if [ $? -eq 0 ]; then
-	passwd -l $CLIENT
+if [[ ! -e /etc/openvpn/easy-rsa/pki/reqs/$CLIENT.req ]]; then
 	echo ""
-	echo "$CLIENT ได้ถูกล็อคเรียบร้อยแล้ว"
+	echo "ไม่มีชื่อลูกค้าที่คุณระบุอยู่ในระบบ"
 	echo ""
-	exit
-else
-	echo ""
-	echo "ชื่อลูกค้าที่ระบุไม่มีอยู่ในระบบ"
-	echo ""
-	exit
+	read -p "กลับไปที่เมนู (Y or N) : " -e -i Y REMOVE
+
+	if [[ "$REMOVE" = 'Y' ]]; then
+		menu
+		exit
+	elif [[ "$REMOVE" = 'N' ]]; then
+		exit
+	fi
+elif [[ -e /etc/openvpn/easy-rsa/pki/reqs/$CLIENT.req ]]; then
+	if [[ -e /etc/openvpn/easy-rsa/Lock-Backup ]]; then
+		cp -rf /etc/openvpn/easy-rsa/pki/reqs/$CLIENT.req /etc/openvpn/easy-rsa/Lock-Backup/$CLIENT.req
+		cp -rf /etc/openvpn/easy-rsa/pki/private/$CLIENT.key /etc/openvpn/easy-rsa/Lock-Backup/$CLIENT.key
+		cp -rf /etc/openvpn/easy-rsa/pki/issued/$CLIENT.crt /etc/openvpn/easy-rsa/Lock-Backup/$CLIENT.crt
+		rm -rf /etc/openvpn/easy-rsa/pki/reqs/$CLIENT.req
+		rm -rf /etc/openvpn/easy-rsa/pki/private/$CLIENT.key
+		rm -rf /etc/openvpn/easy-rsa/pki/issued/$CLIENT.crt
+		EASYRSA_CRL_DAYS=3650 ./easyrsa gen-crl
+		cp /etc/openvpn/easy-rsa/pki/crl.pem /etc/openvpn/crl.pem
+		chmod 644 /etc/openvpn/crl.pem
+		echo ""
+		echo "$CLIENT ได้ถูกล็อกเรียบร้อยแล้ว"
+		echo ""
+		exit
+	else
+		mkdir /etc/openvpn/easy-rsa/Lock-Backup
+		cp -rf /etc/openvpn/easy-rsa/pki/reqs/$CLIENT.req /etc/openvpn/easy-rsa/Lock-Backup/$CLIENT.req
+		cp -rf /etc/openvpn/easy-rsa/pki/private/$CLIENT.key /etc/openvpn/easy-rsa/Lock-Backup/$CLIENT.key
+		cp -rf /etc/openvpn/easy-rsa/pki/issued/$CLIENT.crt /etc/openvpn/easy-rsa/Lock-Backup/$CLIENT.crt
+		rm -rf /etc/openvpn/easy-rsa/pki/reqs/$CLIENT.req
+		rm -rf /etc/openvpn/easy-rsa/pki/private/$CLIENT.key
+		rm -rf /etc/openvpn/easy-rsa/pki/issued/$CLIENT.crt
+		echo ""
+		echo "$CLIENT ได้ถูกล็อกเรียบร้อยแล้ว"
+		echo ""
+		exit
+	fi
 fi
+
 	;;
 
 	2)
 
 echo ""
-read -p "ชื่อลูกค้าที่ต้องการปลดล็อค ? : " CLIENT
+read -p "ชื่อลูกค้าที่ต้องการปลดล็อก : " CLIENT
 
-egrep "^$CLIENT" /etc/passwd >/dev/null
-if [ $? -eq 0 ]; then
-	passwd -u $CLIENT
+if [[ -e /etc/openvpn/easy-rsa/pki/reqs/$CLIENT.req ]]; then
 	echo ""
-	echo "$CLIENT ได้ถูกปลดล็อคเรียบร้อยแล้ว"
+	echo "ชื่อลูกค้าที่คุณระบุไม่ได้ถูกล็อกไว้"
+	echo ""
+	read -p "กลับไปที่เมนู (Y or N) : " -e -i Y REMOVE
+
+	if [[ "$REMOVE" = 'Y' ]]; then
+		menu
+		exit
+	elif [[ "$REMOVE" = 'N' ]]; then
+		exit
+	fi
+elif [[ -e /etc/openvpn/easy-rsa/Lock-Backup/$CLIENT.req ]]; then
+	cp -rf /etc/openvpn/easy-rsa/Lock-Backup/$CLIENT.req /etc/openvpn/easy-rsa/pki/reqs/$CLIENT.req
+	cp -rf /etc/openvpn/easy-rsa/Lock-Backup/$CLIENT.key /etc/openvpn/easy-rsa/pki/private/$CLIENT.key
+	cp -rf /etc/openvpn/easy-rsa/Lock-Backup/$CLIENT.crt /etc/openvpn/easy-rsa/pki/issued/$CLIENT.crt
+	rm -rf /etc/openvpn/easy-rsa/Lock-Backup/$CLIENT.req
+	rm -rf /etc/openvpn/easy-rsa/Lock-Backup/$CLIENT.key
+	rm -rf /etc/openvpn/easy-rsa/Lock-Backup/$CLIENT.crt
+	echo ""
+	echo "$CLIENT ได้ถูกปลดล็อกเรียบร้อยแล้ว"
 	echo ""
 	exit
-else
+elif [[ ! -e /etc/openvpn/easy-rsa/pki/reqs/$CLIENT.req ]]; then
 	echo ""
-	echo "ชื่อลูกค้าที่ระบุไม่มีอยู่ในระบบ"
+	echo "ไม่มีชื่อลูกค้าที่คุณระบุอยู่ในระบบ"
 	echo ""
-	exit
+	read -p "กลับไปที่เมนู (Y or N) : " -e -i Y REMOVE
+
+	if [[ "$REMOVE" = 'Y' ]]; then
+		menu
+		exit
+	elif [[ "$REMOVE" = 'N' ]]; then
+		exit
+	fi
 fi
 
 	;;
@@ -464,10 +551,22 @@ esac
 
 	;;
 
+	10)
+
+if [[ ! -e /usr/local/bin/ed ]]; then
+	wget -O /usr/local/bin/ed "https://raw.githubusercontent.com/nwqionm/OPENEXTRA/master/ed"
+	chmod +x /usr/local/bin/ed
+	ed
+else
+	ed
+fi
+
+	;;
+
 	0)
 
 rm -f /usr/local/bin/menu
-wget -O /usr/local/bin/menu "https://raw.githubusercontent.com/banklovelo01/nonstop/master/menu"
+wget -O /usr/local/bin/menu "https://raw.githubusercontent.com/nwqionm/OPENEXTRA/master/menu"
 chmod +x /usr/local/bin/menu
 menu
 
