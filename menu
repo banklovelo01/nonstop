@@ -15,7 +15,7 @@ NC='\033[0m'
 # Menu
 echo ""
 echo -e "${RED}  (\_(\  ${NC}"
-echo -e "${RED} (=’ :’) :* ${NC} Script by BaNk PrP 082-0083374"
+echo -e "${RED} (=’ :’) :* ${NC} Script by BaNk PrP 082-0083374 Line: e_mokub"
 echo -e "${RED}  (,(”)(”) °.¸¸.• ${NC}"
 echo ""
 echo -e "MENU SCRIPT ${RED}✿.｡.:* *.:｡✿*ﾟ’ﾟ･✿.｡.:*${NC}"
