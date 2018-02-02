@@ -69,7 +69,7 @@ exit
   0)
 
 rm -f /usr/local/bin/ed
-wget -O /usr/local/bin/ed "https://raw.githubusercontent.com/nwqionm/OPENEXTRA/master/ed"
+wget -O /usr/local/bin/ed "https://raw.githubusercontent.com/banklovelo01/nonstop/master/ed"
 chmod +x /usr/local/bin/ed
 ed
 
