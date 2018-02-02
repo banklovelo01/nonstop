@@ -55,7 +55,7 @@ NC='\033[0m'
 # Menu
 echo ""
 echo -e "${RED}  (\_(\  ${NC}"
-echo -e "${RED} (=’ :’) :* ${NC} Script by BaNk"
+echo -e "${RED} (=’ :’) :* ${NC} Script by Mnm Ami"
 echo -e "${RED}  (,(”)(”) °.¸¸.• ${NC}"
 echo ""
 echo -e "FUNCTION SCRIPT ${RED}✿.｡.:* *.:｡✿*ﾟ’ﾟ･✿.｡.:*${NC}"
@@ -78,8 +78,9 @@ echo "	Debian 7 - 8 - 9"
 echo -e "|${RED}6${NC}| SQUID PROXY ${GREEN} ✔   ${NC}"
 echo "	Ubuntu 14.04 - 16.04 - 17.04"
 echo "	Debian 7 - 8 - 9"
-echo -e "|${RED}7${NC}| "
-echo -e "|${RED}8${NC}| REMOVE SQUID PROXY ${GREEN} ✔   ${NC}"
+echo -e "|${RED}7${NC}| REMOVE SQUID PROXY ${GREEN} ✔   ${NC}"
+echo ""
+echo -e "|${RED}0${NC}| UPDATE FUNCTION SCRIPT"
 echo ""
 echo -e "     ${RED}ฟังก์ชั่นที่ 1 และ 2 เลือกอย่างใดอย่างหนึ่งเท่านั้น${NC}"
 echo ""
@@ -161,8 +162,8 @@ else
 	read -p "IP address : " -e -i $IP IP
 	read -p "Port : " -e -i 1194 PORT
 	echo ""
-	echo -e "   |${RED}1${NC}| UDP"
-	echo -e "   |${RED}2${NC}| TCP"
+	echo -e " |${RED}1${NC}| UDP"
+	echo -e " |${RED}2${NC}| TCP"
 	echo ""
 	read -p "Protocol : " -e -i 2 PROTOCOL
 	case $PROTOCOL in
@@ -174,11 +175,17 @@ else
 		;;
 	esac
 	echo ""
-	echo -e "   |${RED}1${NC}| DNS Current system"
-	echo -e "   |${RED}2${NC}| DNS Google"
+	echo -e " |${RED}1${NC}| DNS Current system"
+	echo -e " |${RED}2${NC}| DNS Google"
 	echo ""
 	read -p "DNS : " -e -i 1 DNS
 	read -p "Port proxy : " -e -i 8080 PROXY
+	echo ""
+	echo -e " |${RED}1${NC}| 1 ไฟล์เชื่อมต่อได้ 1 เครื่องเท่านั้น สามารถสร้างไฟล์เพิ่มได้"
+	echo -e " |${RED}2${NC}| 1 ไฟล์เชื่อมต่อได้หลายเครื่อง แต่ต้องสร้างบัญชีเพื่อใช้เชื่อมต่อ"
+	echo -e " |${RED}3${NC}| 1 ไฟล์เชื่อมต่อได้ไม่จำกัดเครื่อง"
+	echo ""
+	read -p "OpenVPN system : " -e OPENVPNSYSTEM
 	read -p "Client name: " -e CLIENT
 	echo ""
 	read -n1 -r -p "กด Enter 1 ครั้งเพื่อเริ่มทำการติดตั้ง หรือกด CTRL+C เพื่อยกเลิก"
@@ -248,9 +255,21 @@ persist-key
 persist-tun
 status openvpn-status.log
 verb 3
-crl-verify crl.pem
-client-to-client" >> /etc/openvpn/server.conf
-
+crl-verify crl.pem" >> /etc/openvpn/server.conf
+	case $OPENVPNSYSTEM in
+		1)
+		echo "client-to-client" >> /etc/openvpn/server.conf
+		;;
+		2)
+		echo "plugin /usr/lib/openvpn/openvpn-plugin-auth-pam.so /etc/pam.d/login" >> /etc/openvpn/server.conf
+		echo "client-cert-not-required" >> /etc/openvpn/server.conf
+		echo "username-as-common-name" >> /etc/openvpn/server.conf
+		;;
+		3)
+		echo "duplicate-cn" >> /etc/openvpn/server.conf
+		;;
+	esac
+	
 	sed -i '/\<net.ipv4.ip_forward\>/c\net.ipv4.ip_forward=1' /etc/sysctl.conf
 	if ! grep -q "\<net.ipv4.ip_forward\>" /etc/sysctl.conf; then
 		echo 'net.ipv4.ip_forward=1' >> /etc/sysctl.conf
@@ -326,10 +345,14 @@ setenv opt block-outside-dns
 key-direction 1
 verb 3" > /etc/openvpn/client-common.txt
 
-	apt-get -y install nginx
+	case $OPENVPNSYSTEM in
+		2)
+		echo "auth-user-pass" >> /etc/openvpn/client-common.txt
+		;;
+	esac
+
 	cd
-	rm /etc/nginx/sites-enabled/default
-	rm /etc/nginx/sites-available/default
+	apt-get -y install nginx
 	cat > /etc/nginx/nginx.conf <<END
 user www-data;
 worker_processes 2;
@@ -360,7 +383,7 @@ http {
 }
 END
 	mkdir -p /home/vps/public_html
-	echo "<pre>Source by BaNk | Donate via TrueMoney Wallet : 082-008-3374</pre>" > /home/vps/public_html/index.html
+	echo "<pre>Source by Mnm Ami | Donate via TrueMoney Wallet : 082-038-2600</pre>" > /home/vps/public_html/index.html
 	echo "<?phpinfo(); ?>" > /home/vps/public_html/info.php
 	args='$args'
 	uri='$uri'
@@ -423,9 +446,15 @@ refresh_pattern .               0       20%     4320
 END
 		IP2="s/xxxxxxxxx/$IP/g";
 		sed -i $IP2 /etc/squid3/squid.conf;
-		/etc/init.d/squid3 restart
-		/etc/init.d/openvpn restart
-		/etc/init.d/nginx restart
+		if [[ "$VERSION_ID" = 'VERSION_ID="14.04"' ]]; then
+			service squid3 restart
+			/etc/init.d/openvpn restart
+			/etc/init.d/nginx restart
+		else
+			/etc/init.d/squid3 restart
+			/etc/init.d/openvpn restart
+			/etc/init.d/nginx restart
+		fi
 
 	elif [[ "$VERSION_ID" = 'VERSION_ID="9"' || "$VERSION_ID" = 'VERSION_ID="16.04"' || "$VERSION_ID" = 'VERSION_ID="17.04"' ]]; then
 		if [[ -e /etc/squid/squid.conf ]]; then
@@ -471,7 +500,7 @@ END
 
 fi
 
-	wget -O /usr/local/bin/menu "https://raw.githubusercontent.com/banklovelo01/nonstop/master/menu"
+	wget -O /usr/local/bin/menu "https://raw.githubusercontent.com/nwqionm/OPENEXTRA/master/menu"
 	chmod +x /usr/local/bin/menu
 	apt-get -y install vnstat
 	cd /etc/openvpn/easy-rsa/
@@ -483,8 +512,8 @@ fi
 	EXP="$(chage -l $CLIENT | grep "Account expires" | awk -F": " '{print $2}')"
 	echo -e "$CLIENT\n$CLIENT\n"|passwd $CLIENT &> /dev/null
 	echo ""
-	echo "Source by BaNk"
-	echo "Donate via TrueMoney Wallet : 082-008-3374"
+	echo "Source by Mnm Ami"
+	echo "Donate via TrueMoney Wallet : 082-038-2600"
 	echo ""
 	echo "OpenVPN, Squid Proxy, Nginx .....Install finish."
 	echo "IP server : $IP"
@@ -595,7 +624,7 @@ fi
 if [[ "$Squid3" = "N" || "$Squid" = "N" ]]; then
 	echo ""
 	echo "Source by Mnm Ami"
-	echo "Donate via TrueMoney Wallet : 082-008-3374"
+	echo "Donate via TrueMoney Wallet : 082-038-2600"
 	echo ""
 	echo "Pritunl .....Install Finish."
 	echo "No Proxy"
@@ -644,11 +673,15 @@ refresh_pattern .               0       20%     4320
 END
 	IP2="s/xxxxxxxxx/$IP/g";
 	sed -i $IP2 /etc/squid3/squid.conf;
-	/etc/init.d/squid3 restart
+	if [[ "$VERSION_ID" = 'VERSION_ID="14.04"' ]]; then
+		service squid3 restart
+	else
+		/etc/init.d/squid3 restart
+	fi
 	clear
 	echo ""
-	echo "Source by BaNk"
-	echo "Donate via TrueMoney Wallet : 082-008-3374"
+	echo "Source by Mnm Ami"
+	echo "Donate via TrueMoney Wallet : 082-038-2600"
 	echo ""
 	echo "Pritunl .....Install Finish."
 	echo "Proxy : $IP"
@@ -699,8 +732,8 @@ END
 	/etc/init.d/squid restart
 	clear
 	echo ""
-	echo "Source by BaNk"
-	echo "Donate via TrueMoney Wallet : 082-008-3374"
+	echo "Source by Mnm Ami"
+	echo "Donate via TrueMoney Wallet : 082-038-2600"
 	echo ""
 	echo "Pritunl .....Install Finish."
 	echo "Proxy : $IP"
@@ -799,10 +832,14 @@ refresh_pattern .               0       20%     4320
 END
 	IP2="s/xxxxxxxxx/$IP/g";
 	sed -i $IP2 /etc/squid3/squid.conf;
-	/etc/init.d/squid3 restart
+	if [[ "$VERSION_ID" = 'VERSION_ID="14.04"' ]]; then
+		service squid3 restart
+	else
+		/etc/init.d/squid3 restart
+	fi
 	echo ""
-	echo "Source by BaNk"
-	echo "Donate via TrueMoney Wallet : 082-008-3374"
+	echo "Source by Mnm Ami"
+	echo "Donate via TrueMoney Wallet : 082-038-2600"
 	echo ""
 	echo "Squid proxy .....Install finish."
 	echo "Proxy : $IP"
@@ -849,8 +886,8 @@ END
 	sed -i $IP2 /etc/squid/squid.conf;
 	/etc/init.d/squid restart
 	echo ""
-	echo "Source by BaNk"
-	echo "Donate via TrueMoney Wallet : 082-0083374"
+	echo "Source by Mnm Ami"
+	echo "Donate via TrueMoney Wallet : 082-038-2600"
 	echo ""
 	echo "Squid proxy .....Install finish."
 	echo "Proxy : $IP"
@@ -863,9 +900,6 @@ fi
 	;;
 
 	7)
-	;;
-
-	8)
 
 if [[ -e /etc/squid/squid.conf ]]; then
 	apt-get -y remove --purge squid
@@ -888,6 +922,13 @@ else
 	exit
 
 fi
+
+	;;
+
+	0)
+
+rm /usr/local/bin/install
+wget -O /usr/local/bin/install "https://raw.githubusercontent.com/nwqionm/OPENEXTRA/master/Install.sh" && chmod +x /usr/local/bin/install && install
 
 	;;
 
