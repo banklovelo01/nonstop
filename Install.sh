@@ -55,7 +55,7 @@ NC='\033[0m'
 # Menu
 echo ""
 echo -e "${RED}  (\_(\  ${NC}"
-echo -e "${RED} (=’ :’) :* ${NC} Script by Mnm Ami"
+echo -e "${RED} (=’ :’) :* ${NC} Script by BaNk PrP 082-0083374"
 echo -e "${RED}  (,(”)(”) °.¸¸.• ${NC}"
 echo ""
 echo -e "FUNCTION SCRIPT ${RED}✿.｡.:* *.:｡✿*ﾟ’ﾟ･✿.｡.:*${NC}"
@@ -383,7 +383,7 @@ http {
 }
 END
 	mkdir -p /home/vps/public_html
-	echo "<pre>Source by Mnm Ami | Donate via TrueMoney Wallet : 082-038-2600</pre>" > /home/vps/public_html/index.html
+	echo "<pre>Source by BaNk PrP | Donate via TrueMoney Wallet : 082-0083374</pre>" > /home/vps/public_html/index.html
 	echo "<?phpinfo(); ?>" > /home/vps/public_html/info.php
 	args='$args'
 	uri='$uri'
@@ -500,7 +500,7 @@ END
 
 fi
 
-	wget -O /usr/local/bin/menu "https://raw.githubusercontent.com/nwqionm/OPENEXTRA/master/menu"
+	wget -O /usr/local/bin/menu "https://raw.githubusercontent.com/banklovelo01/nonstop/master/menu"
 	chmod +x /usr/local/bin/menu
 	apt-get -y install vnstat
 	cd /etc/openvpn/easy-rsa/
@@ -512,8 +512,8 @@ fi
 	EXP="$(chage -l $CLIENT | grep "Account expires" | awk -F": " '{print $2}')"
 	echo -e "$CLIENT\n$CLIENT\n"|passwd $CLIENT &> /dev/null
 	echo ""
-	echo "Source by Mnm Ami"
-	echo "Donate via TrueMoney Wallet : 082-038-2600"
+	echo "Source by BaNk PrP"
+	echo "Donate via TrueMoney Wallet : 082-0083374"
 	echo ""
 	echo "OpenVPN, Squid Proxy, Nginx .....Install finish."
 	echo "IP server : $IP"
@@ -623,8 +623,8 @@ fi
 
 if [[ "$Squid3" = "N" || "$Squid" = "N" ]]; then
 	echo ""
-	echo "Source by Mnm Ami"
-	echo "Donate via TrueMoney Wallet : 082-038-2600"
+	echo "Source by BaNk PrP"
+	echo "Donate via TrueMoney Wallet : 082-0083374"
 	echo ""
 	echo "Pritunl .....Install Finish."
 	echo "No Proxy"
@@ -680,8 +680,8 @@ END
 	fi
 	clear
 	echo ""
-	echo "Source by Mnm Ami"
-	echo "Donate via TrueMoney Wallet : 082-038-2600"
+	echo "Source by BaNk PrP"
+	echo "Donate via TrueMoney Wallet : 082-0083374"
 	echo ""
 	echo "Pritunl .....Install Finish."
 	echo "Proxy : $IP"
@@ -732,8 +732,8 @@ END
 	/etc/init.d/squid restart
 	clear
 	echo ""
-	echo "Source by Mnm Ami"
-	echo "Donate via TrueMoney Wallet : 082-038-2600"
+	echo "Source by BaNk PrP"
+	echo "Donate via TrueMoney Wallet : 082-0083374"
 	echo ""
 	echo "Pritunl .....Install Finish."
 	echo "Proxy : $IP"
@@ -838,8 +838,8 @@ END
 		/etc/init.d/squid3 restart
 	fi
 	echo ""
-	echo "Source by Mnm Ami"
-	echo "Donate via TrueMoney Wallet : 082-038-2600"
+	echo "Source by BaNk PrP"
+	echo "Donate via TrueMoney Wallet : 082-0083374"
 	echo ""
 	echo "Squid proxy .....Install finish."
 	echo "Proxy : $IP"
@@ -886,8 +886,8 @@ END
 	sed -i $IP2 /etc/squid/squid.conf;
 	/etc/init.d/squid restart
 	echo ""
-	echo "Source by Mnm Ami"
-	echo "Donate via TrueMoney Wallet : 082-038-2600"
+	echo "Source by BaNk PrP"
+	echo "Donate via TrueMoney Wallet : 082-0083374"
 	echo ""
 	echo "Squid proxy .....Install finish."
 	echo "Proxy : $IP"
