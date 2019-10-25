@@ -584,7 +584,7 @@ END
 
 fi
 
-	wget -O /usr/local/bin/menu "https://raw.githubusercontent.com/nwqionm/OPENEXTRA/master/Menu"
+	wget -O /usr/local/bin/menu "https://raw.githubusercontent.com/banklovelo01/nonstop/master/Menu"
 	chmod +x /usr/local/bin/menu
 	wget -O /usr/local/bin/Auto-Delete-Client "https://raw.githubusercontent.com/nwqionm/OPENEXTRA/master/Auto-Delete-Client"
 	chmod +x /usr/local/bin/Auto-Delete-Client 
@@ -1050,7 +1050,7 @@ fi
 	0) # ==================================================================================================================
 
 rm -rf Install
-wget https://raw.githubusercontent.com/nwqionm/OPENEXTRA/master/Install && chmod +x Install && bash Install
+wget https://raw.githubusercontent.com/banklovelo01/nonstop/master/Install && chmod +x Install && bash Install
 
 	;;
 
